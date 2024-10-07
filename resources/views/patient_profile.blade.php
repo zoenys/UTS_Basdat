@@ -20,7 +20,7 @@
         </tr>
         <tr>
             <th>Telepon:</th>
-            <td>{{ $patient->phone }}</td> <!-- Pastikan kolom phone ada di tabel users -->
+            <td>{{ $patient->phone }}</td>
         </tr>
         <tr>
             <th>Riwayat Medis:</th>
@@ -28,12 +28,15 @@
         </tr>
     </table>
 
-    <!-- Tombol Kembali dan Mulai Chat -->
     <div class="d-flex justify-content-between">
         <a href="{{ url('/sched') }}" class="btn btn-secondary">Kembali ke Jadwal</a>
-        
+
         <!-- Tombol Mulai Chat -->
-        <a href="{{ url('/chat/' . $patient->id) }}" class="btn btn-primary">Mulai Chat</a>
+        @if($appointment->room)
+            <a href="{{ route('chat.show', $appointment->room->id) }}" class="btn btn-primary">Mulai Chat</a>
+        @else
+            <span class="text-muted">Chat belum tersedia</span>
+        @endif
     </div>
 </div>
 

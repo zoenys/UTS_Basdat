@@ -95,13 +95,17 @@
                                 <p>Experience: {{ $psychologist->experience }} years</p>
                                 <p>Hire Date: {{ $psychologist->hire_date }}</p>
                                 <div class="consult-btn mt-20">
-                                    <a href="{{ url('/choose-schedule') }}" class="btn btn-primary">Konsultasi Sekarang</a>
+                                    <!-- Mengirim ID psikolog pada URL -->
+                                    <a href="{{ url('/choose-schedule?psychologistId=' . $psychologist->user->id) }}" class="btn btn-primary">Konsultasi Sekarang</a>
                                 </div>
+                                
                                 <!-- Tambahkan tombol Cek Status Konsultasi -->
                                 <div class="status-btn mt-20">
-                                    <a href="{{ url('/status') }}" class="btn btn-secondary">Cek Status Konsultasi</a>
+                                    <!-- Mengirim ID psikolog pada URL -->
+                                    <a href="{{ url('/status?psychologistId=' . $psychologist->user->id) }}" class="btn btn-secondary">Cek Status Konsultasi</a>
                                 </div>
                             </div>
+                            
                         </div>
                     </div>
                 @endforeach            

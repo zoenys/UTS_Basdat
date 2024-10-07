@@ -9,7 +9,7 @@
 <body>
 
 <div class="container mt-5">
-    <h2 class="text-center">Pilih Jadwal Konsultasi</h2>
+    <h2 class="text-center">Jadwal Konsultasi untuk Psikolog</h2>
 
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -19,31 +19,36 @@
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Tanggal</th>
-                <th>Waktu Mulai</th>
-                <th>Waktu Selesai</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($schedules as $schedule)
+    <!-- Tabel Jadwal Konsultasi -->
+    @if($schedules->isNotEmpty())
+        <table class="table table-bordered">
+            <thead>
                 <tr>
-                    <td>{{ $schedule->date }}</td>
-                    <td>{{ $schedule->start_time }}</td>
-                    <td>{{ $schedule->end_time }}</td>
-                    <td>
-                        <form action="{{ route('user.schedule.book', $schedule->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-primary">Pesan</button>
-                        </form>
-                    </td>
+                    <th>Tanggal</th>
+                    <th>Waktu Mulai</th>
+                    <th>Waktu Selesai</th>
+                    <th>Aksi</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach ($schedules as $schedule)
+                    <tr>
+                        <td>{{ $schedule->date }}</td>
+                        <td>{{ $schedule->start_time }}</td>
+                        <td>{{ $schedule->end_time }}</td>
+                        <td>
+                            <form action="{{ route('user.schedule.book', $schedule->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">Pesan</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p class="text-center">Tidak ada jadwal yang tersedia untuk psikolog ini.</p>
+    @endif
 </div>
 
 <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>

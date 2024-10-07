@@ -6,15 +6,25 @@ use App\Models\ConsultationSchedule;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Room;
+use App\Models\User;
 
 class AppointmentController extends Controller
 {
-    public function availableSchedules()
+    public function availableSchedules(Request $request)
     {
-        // Menampilkan jadwal yang masih available untuk dipilih user
-        $schedules = ConsultationSchedule::where('status', 'available')->get();
-        return view('choose-schedule', compact('schedules'));
+        // Ambil ID psikolog dari URL
+        $psychologistId = $request->psychologistId;
+    
+        // Ambil jadwal hanya milik psikolog yang dipilih oleh user
+        $schedules = ConsultationSchedule::where('psychologist_id', $psychologistId)
+                                         ->where('status', 'available') // Hanya jadwal yang tersedia
+                                         ->get();
+    
+        // Kirim data jadwal ke view
+        return view('choose-schedule', compact('schedules', 'psychologistId'));
     }
+    
 
     public function book(Request $request, $id)
     {
@@ -55,11 +65,22 @@ class AppointmentController extends Controller
         return redirect()->route('user.schedule.status')->with('success', 'Pembayaran berhasil, menunggu validasi admin.');
     }
 
-    public function paymentStatus()
+    public function paymentStatus(Request $request)
     {
-        $appointments = Appointment::where('user_id', Auth::id())->with('schedule')->get();
-        return view('status', compact('appointments'));
+        // Ambil ID psikolog dari query string jika ada
+        $psychologistId = $request->psychologistId;
+    
+        // Ambil appointments untuk user dan psikolog terkait
+        $appointments = Appointment::where('user_id', Auth::id())
+                                   ->whereHas('schedule', function($query) use ($psychologistId) {
+                                       $query->where('psychologist_id', $psychologistId);
+                                   })
+                                   ->with('schedule')
+                                   ->get();
+    
+        return view('status', compact('appointments', 'psychologistId'));
     }
+    
 
     public function validatePayment()
     {
@@ -76,4 +97,21 @@ class AppointmentController extends Controller
 
         return redirect()->route('admin.validate.payment')->with('success', 'Pembayaran berhasil divalidasi.');
     }
+    public function showHistory()
+    {
+        // Ambil semua room yang sudah selesai, di mana user adalah psikolog atau user terkait
+        $rooms = Room::with('appointment.schedule.psychologist', 'appointment.user')
+                    ->whereHas('appointment', function($query) {
+                        $query->where('user_id', Auth::id())
+                              ->orWhereHas('schedule', function($q) {
+                                  $q->where('psychologist_id', Auth::id());
+                              });
+                    })
+                    ->get();
+    
+        // Kirim data rooms ke view
+        return view('history', compact('rooms'));
+    }
+    
+
 }

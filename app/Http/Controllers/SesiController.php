@@ -113,14 +113,14 @@ class SesiController extends Controller
         // Periksa role pengguna dan arahkan ke halaman yang sesuai
         switch ($user->role) {
             case 'admin':
-                return redirect()->intended('/admin_validate')->with('status', 'Selamat datang Admin');
+                return redirect('/admin_validate')->with('status', 'Selamat datang Admin');
             case 'psikolog':
-                return redirect()->intended('/sched')->with('status', 'Selamat datang Psikolog');
+                return redirect('/sched')->with('status', 'Selamat datang Psikolog');
             case 'user':
-                return redirect()->intended('/doctor')->with('status', 'Selamat datang Pasien');
+                return redirect('/doctor')->with('status', 'Selamat datang Pasien');
             default:
                 Auth::logout();
-                return redirect('/login')->withErrors(['login' => 'Role tidak dikenali.']);
+                return redirect('/')->withErrors(['.' => 'Role tidak dikenali.']);
         }
     }
 
@@ -156,6 +156,6 @@ class SesiController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login')->with('status', 'Anda telah berhasil logout.');
+        return redirect('/')->with('status', 'Anda telah berhasil logout.');
     }
 }

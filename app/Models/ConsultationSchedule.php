@@ -21,3 +21,4 @@ class ConsultationSchedule extends Model
         return $this->hasMany(Appointment::class, 'schedule_id');
     }
 }
+

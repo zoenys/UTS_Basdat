@@ -12,24 +12,22 @@ class UserAkses
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
-     * @param  string  $role
+     * @param  mixed  ...$roles
      * @return mixed
      */
-    public function handle($request, Closure $next, $role)
+    public function handle($request, Closure $next, ...$roles)
     {
         // Cek apakah pengguna sudah login
         if (!Auth::check()) {
             return redirect('/login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        // Cek apakah role pengguna sesuai dengan yang diminta
-        if (Auth::user()->role !== $role) {
-            // Logout pengguna jika role tidak sesuai dan arahkan ke login
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        // Ambil role pengguna yang login
+        $userRole = Auth::user()->role;
 
-            return redirect('/login')->with('error', 'Anda tidak punya akses ke halaman itu.');
+        // Cek apakah role pengguna termasuk dalam role yang diizinkan
+        if (!in_array($userRole, $roles)) {
+            return redirect('/')->with('error', 'Anda tidak punya akses ke halaman tersebut.');
         }
 
         return $next($request);

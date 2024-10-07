@@ -5,15 +5,15 @@ use App\Http\Controllers\ConsultationScheduleController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AdminAppointmentController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ChatController;
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [SesiController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [SesiController::class, 'login']);
-    // Route untuk menampilkan form register
     Route::get('/register', [SesiController::class, 'showRegisterForm'])->name('register');
-    // Route untuk menangani proses register
     Route::post('/register', [SesiController::class, 'register']);
 });
+
 
 // Hanya admin yang bisa mengakses validasi.blade.php
 Route::middleware(['auth', 'userakses:admin'])->group(function () {
@@ -44,6 +44,11 @@ Route::get('/', function () {
     return view('index');
 });
 
+// Default route untuk halaman utama
+Route::get('/contact', function () {
+    return view('contact');
+});
+
 // Route untuk psikolog membuat jadwal
 
 
@@ -51,19 +56,33 @@ Route::middleware(['auth', 'userakses:psikolog'])->group(function () {
     Route::get('/sched', [ConsultationScheduleController::class, 'index'])->name('psychologist.schedule.index');
     Route::post('/sched', [ConsultationScheduleController::class, 'store'])->name('psychologist.schedule.store');
     Route::get('/sched/{user}', [ConsultationScheduleController::class, 'showPatient'])->name('psychologist.showPatient');
-
+    // Route untuk melihat riwayat sesi konsultasi
+    Route::get('/history', [ChatController::class, 'showHistory'])->name('psychologist.history');
 });
 
 
 Route::middleware(['auth', 'userakses:user'])->group(function () {
     Route::get('/choose-schedule', [AppointmentController::class, 'availableSchedules'])->name('user.schedule.available');
     Route::post('/book-schedule/{id}', [AppointmentController::class, 'book'])->name('user.schedule.book');
+    Route::get('/status', [AppointmentController::class, 'paymentStatus'])->name('user.schedule.status');    
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('user.appointments.index');
     Route::get('/bayar/{id}', [AppointmentController::class, 'paymentForm'])->name('user.schedule.pay');
     Route::post('/bayar/{id}', [AppointmentController::class, 'processPayment'])->name('user.schedule.processPayment');
-    Route::get('/status', [AppointmentController::class, 'paymentStatus'])->name('user.schedule.status');
+    // Route::get('/status', [AppointmentController::class, 'paymentStatus'])->name('user.schedule.status');
+    Route::get('/user/history', [ChatController::class, 'viewUserHistory'])->name('user.history');
+    Route::get('/chat/{roomId}/history', [ChatController::class, 'viewChatHistory'])->name('chat.history.show');
+    // Route::get('/history', [AppointmentController::class, 'showHistory'])->name('user.history');
 });
 
+Route::middleware(['auth', 'userakses:user,psikolog'])->group(function () {
+    Route::get('/chat/{roomId}', [ChatController::class, 'showRoom'])->name('chat.show');
+    Route::post('/chat/{roomId}/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::post('/end-chat/{roomId}', [ChatController::class, 'endSession'])->name('chat.endSession');
+    // Route::post('/chat/{roomId}/end', [ChatController::class, 'endSession'])->name('chat.endSession');
+
+
+    // Route::post('/chat/{roomId}/end', [ChatController::class, 'endSession'])->name('chat.end');
+});
 
 
 

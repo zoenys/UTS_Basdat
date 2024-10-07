@@ -20,4 +20,10 @@ class Appointment extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function room()
+    {
+        return $this->hasOne(Room::class, 'appointment_id');
+    }
+    
 }

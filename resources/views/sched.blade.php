@@ -106,7 +106,6 @@
                                 <div class="main-menu f-right d-none d-lg-block">
                                     <nav>
                                         <ul id="navigation">
-                                            <li><a href="index">Psychologist</a></li>
                                             <li><a href="#">Hello, {{ Auth::user()->name }}</a></li>
                                             <li>
                                                 <a href="{{ route('logout') }}"
@@ -133,7 +132,7 @@
         <div class="container">
             <!-- Form untuk menambah jadwal -->
             <div class="form-card">
-                <h2>Hello, {{ Auth::user()->name }}. Set Your Available Schedule</h2>
+                <h2> Set Your Available Schedule</h2>
                 
                 @if(session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>

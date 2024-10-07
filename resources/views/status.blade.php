@@ -34,14 +34,15 @@
                     <td>{{ $appointment->schedule->psychologist->name }}</td>
                     <td>{{ ucfirst($appointment->status) }}</td>
                     <td>
-                        @if ($appointment->status == 'approved')
-                            <a href="{{ url('/chat') }}" class="btn btn-primary">Mulai Chat</a>
+                        @if ($appointment->status == 'approved' && $appointment->room)
+                            <a href="{{ route('chat.show', $appointment->room->id) }}" class="btn btn-primary">Mulai Chat</a>
                         @elseif($appointment->status == 'pending_payment')
                             <span class="text-muted">Menunggu Pembayaran</span>
                         @else
                             <span class="text-muted">Menunggu Validasi</span>
                         @endif
                     </td>
+                    
                 </tr>
             @endforeach
             </tbody>
@@ -52,6 +53,12 @@
     <div class="mt-3">
         <a href="{{ url('/doctor') }}" class="btn btn-secondary">Kembali ke Daftar Psikolog</a>
     </div>
+
+    {{-- <!-- Tombol untuk mengakses halaman Riwayat Konsultasi -->
+    <div class="mt-3">
+        <a href="{{ route('user.history') }}" class="btn btn-info">Lihat Riwayat Konsultasi</a>
+    </div> --}}
+    
 </div>
 </body>
 </html>

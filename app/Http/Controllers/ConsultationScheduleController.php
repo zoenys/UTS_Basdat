@@ -6,6 +6,8 @@ use App\Models\ConsultationSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User; // Impor model User
+use App\Models\Room;
+use App\Models\Appointment; // Impor model Appointment
 
 
 class ConsultationScheduleController extends Controller
@@ -13,21 +15,44 @@ class ConsultationScheduleController extends Controller
     // Tampilkan jadwal konsultasi dan formulir untuk membuat jadwal
     public function index()
     {
-        // Ambil jadwal yang dimiliki oleh psikolog yang login beserta appointment dan user
-        $schedules = ConsultationSchedule::with('appointments.user')
-                        ->where('psychologist_id', Auth::id())
+        // Hanya ambil jadwal yang belum selesai
+        $schedules = ConsultationSchedule::where('psychologist_id', Auth::id())
+                        ->where('status', '!=', 'done') // Sembunyikan sesi yang sudah selesai
+                        ->with('appointments.user')
                         ->get();
+    
         return view('sched', compact('schedules'));
     }
+    
 
     public function showPatient($userId)
     {
-        // Ambil detail pasien beserta profilnya (medical_history)
+        // Ambil detail pasien
         $patient = User::with('userProfile')->findOrFail($userId);
     
-        // Tampilkan view untuk profil pasien
-        return view('patient_profile', compact('patient'));
+        // Ambil appointment terkait pasien dan psikolog yang sedang login
+        $appointment = Appointment::whereHas('schedule', function ($query) {
+            $query->where('psychologist_id', Auth::id());
+        })->where('user_id', $userId)
+          ->with('room') // Pastikan untuk mengambil relasi room
+          ->first();
+    
+        // Jika room belum ada, buat room baru
+        if ($appointment && !$appointment->room) {
+            $room = Room::create([
+                'appointment_id' => $appointment->id,
+                'psychologist_id' => $appointment->schedule->psychologist_id,
+                'user_id' => $appointment->user_id,
+            ]);
+            $appointment->load('room'); // Reload appointment untuk mendapatkan room terbaru
+        }
+    
+        // Tampilkan view dengan data yang benar
+        return view('patient_profile', compact('patient', 'appointment'));
     }
+    
+    
+    
     
 
     // Simpan jadwal konsultasi
@@ -62,4 +87,22 @@ class ConsultationScheduleController extends Controller
 
         return redirect()->route('psychologist.schedule.index')->with('success', 'Jadwal berhasil dibuat.');
     }
+
+    public function chooseSchedule(Request $request)
+    {
+        // Ambil ID psikolog yang dipilih
+        $psychologistId = $request->psychologistId;
+    
+        // Ambil jadwal hanya milik psikolog yang dipilih oleh user
+        $schedules = ConsultationSchedule::where('psychologist_id', $psychologistId)
+                                         ->where('status', 'available') // Hanya jadwal yang tersedia
+                                         ->get();
+    
+        // Ambil semua psikolog untuk dropdown, agar user bisa memilih ulang psikolog
+        $psychologists = User::where('role', 'psikolog')->get();
+    
+        return view('choose_schedule', compact('schedules', 'psychologists', 'psychologistId'));
+    }
+    
+    
 }
