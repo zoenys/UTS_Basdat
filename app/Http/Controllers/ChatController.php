@@ -14,18 +14,40 @@ class ChatController extends Controller
 {
     public function showRoom($roomId)
     {
+        // Mengambil data room beserta appointment dan jadwal (schedule)
         $room = Room::with('appointment.schedule')->findOrFail($roomId);
         
-        // Hitung waktu yang tersisa berdasarkan waktu akhir dari schedule
-        $currentTime = now();
-        $endTime = Carbon::parse($room->appointment->schedule->end_time); // Konversi ke objek Carbon
-        $remainingTime = max(0, $endTime->diffInSeconds($currentTime));
+        // Ambil start_time dan end_time dari schedule
+        $startTime = Carbon::parse($room->appointment->schedule->start_time);
+        $endTime = Carbon::parse($room->appointment->schedule->end_time);
+        $currentTime = Carbon::now();
         
-        // Ambil pengguna (psikolog dan pasien) yang terlibat
-        $users = collect([$room->appointment->schedule->psychologist, $room->appointment->user]);
+        // Cek apakah sesi sudah selesai (done)
+        if ($room->appointment->schedule->status === 'done') {
+            // Jika sesi selesai, arahkan ke halaman status dengan pesan
+            return redirect()->route('user.schedule.status')->with('message', 'Sesi telah selesai.');
+        }
     
-        return view('chat', compact('room', 'remainingTime', 'users'));
+        // Jika waktu saat ini lebih dari end_time, timer sudah habis
+        if ($currentTime->greaterThan($endTime)) {
+            $remainingTime = 0;
+        } else {
+            // Hitung selisih waktu (dalam detik) antara waktu sekarang dan waktu akhir (end_time)
+            $remainingTime = $endTime->diffInSeconds($currentTime);
+        }
+    
+        // Pastikan user yang mengakses room adalah bagian dari sesi
+        if (Auth::id() !== $room->appointment->user_id && Auth::id() !== $room->appointment->schedule->psychologist_id) {
+            return redirect()->route('user.schedule.status')->with('error', 'Anda tidak memiliki akses ke sesi ini.');
+        }
+        
+        // Ambil pengguna yang terlibat (psikolog dan user)
+        $users = collect([$room->appointment->schedule->psychologist, $room->appointment->user]);
+        
+        // Kirim data ke view
+        return view('chat', compact('room', 'remainingTime', 'users', 'startTime', 'endTime'));
     }
+    
     
     public function sendMessage(Request $request, $roomId)
     {
@@ -42,6 +64,11 @@ class ChatController extends Controller
             return abort(403, 'Anda tidak punya akses ke room ini');
         }
     
+        // Cek apakah sesi sudah selesai
+        if ($room->appointment->schedule->status === 'done') {
+            return redirect()->route('user.schedule.status')->with('message', 'Sesi telah selesai.');
+        }
+    
         // Simpan pesan baru
         Message::create([
             'room_id' => $room->id,
@@ -52,6 +79,7 @@ class ChatController extends Controller
         // Redirect kembali ke chat room
         return redirect()->route('chat.show', $roomId);
     }
+    
     public function endSession($roomId)
     {
         // Cari room berdasarkan ID
@@ -59,7 +87,6 @@ class ChatController extends Controller
     
         // Pastikan psikolog yang memiliki sesi yang bisa mengakhirinya
         if (Auth::user()->id === $room->appointment->schedule->psychologist_id) {
-    
             // Tandai bahwa sesi sudah berakhir
             $schedule = $room->appointment->schedule;
             $schedule->status = 'done'; // Tandai sesi sebagai selesai
@@ -76,6 +103,7 @@ class ChatController extends Controller
     
         return redirect()->back()->with('error', 'Anda tidak diizinkan untuk mengakhiri sesi ini.');
     }
+    
 
     public function showHistory()
     {

@@ -13,8 +13,13 @@ class AppointmentController extends Controller
 {
     public function availableSchedules(Request $request)
     {
-        // Ambil ID psikolog dari URL
+        // Ambil ID psikolog dari query string
         $psychologistId = $request->psychologistId;
+    
+        // Pastikan ada ID psikolog
+        if (!$psychologistId) {
+            return back()->withErrors('Silakan pilih psikolog terlebih dahulu.');
+        }
     
         // Ambil jadwal hanya milik psikolog yang dipilih oleh user
         $schedules = ConsultationSchedule::where('psychologist_id', $psychologistId)

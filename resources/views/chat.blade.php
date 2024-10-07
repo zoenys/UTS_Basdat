@@ -2,9 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Chat Room UI - Layanan Psikologi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chat Room UI - Layanan Psikologi</title>
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/fontawesome-all.min.css') }}">
@@ -93,8 +92,10 @@
 <div class="container">
     <div class="chat-room">
         <div class="card">
-            <div class="card-header"><h3>Chat Room</h3>
-                <span id="timer"></span> <!-- Timer akan ditampilkan di sini --></div>
+            <div class="card-header">
+                <h3>Chat Room</h3>
+                <span id="timer"></span> <!-- Timer akan ditampilkan di sini -->
+            </div>
             <div class="card-body" id="message_area">
                 @foreach($room->messages as $message)
                     <div class="message-box">
@@ -120,7 +121,7 @@
         <div class="card">
             <div class="card-header">
                 Users Online
-                <span id="timer"></span> <!-- Timer akan ditampilkan di sini -->
+                <span id="timer"></span> <!-- Timer juga bisa ditampilkan di sini jika perlu -->
             </div>
             <div class="card-body" id="user_list">
                 @foreach($users as $user)
@@ -140,9 +141,11 @@
         </div>
 
         @if(Auth::user()->role === 'psikolog')
+        <!-- Tombol "Tutup" menggantikan tombol "Akhiri Sesi" -->
         <form method="POST" action="{{ route('chat.endSession', $room->id) }}">
             @csrf
-            <button type="submit" class="btn btn-danger mt-3">Akhiri Sesi</button>
+            <!-- Ganti tombol "Akhiri Sesi" menjadi "Tutup" -->
+            <button type="submit" class="btn btn-danger mt-3" onclick="window.location.href='/sched'">Tutup</button>
         </form>
         @endif
     </div>
@@ -152,20 +155,19 @@
 <script src="{{ asset('assets/js/jquery-1.12.4.min.js') }}"></script>
 <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
 <script>
-    // Hitung mundur timer berdasarkan waktu dari backend (dalam detik)
-    let duration = {{ $remainingTime }};
+    let duration = {{ $remainingTime }}; // Waktu yang tersisa dalam detik, diambil dari server
     let countdownTimer = setInterval(function() {
         if (duration <= 0) {
             clearInterval(countdownTimer);
-            window.location.href = "{{ Auth::user()->role === 'psikolog' ? route('psychologist.schedule.index') : route('user.schedule.status') }}";
+            document.getElementById("timer").innerText = "Sesi Berakhir!";
         } else {
             let minutes = Math.floor(duration / 60);
             let seconds = duration % 60;
+            // Tampilkan timer dalam format menit:detik
             document.getElementById("timer").innerText = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
             duration--;
         }
     }, 1000);
 </script>
-
 </body>
 </html>
